@@ -19,7 +19,6 @@ async def bot_start(message: types.Message):
         msg = f"@{user[2]} bazaga qo'shildi.\nBazada {count} ta foydalanuvchi bor."
         await bot.send_message(chat_id=ADMINS[0], text=msg)
     # user = await db.select_user(telegram_id=message.from_user.id)
-    await state.finish()
     fin = f"Assalomu alaykum [{message.from_user.full_name}](tg://user?id={message.from_user.id}) botimizga xush " \
           f"kelibsiz. Quyidagi tugmalardan keragini tanlang 👇"
     await message.answer(text=fin, parse_mode='markdown', reply_markup=main)
