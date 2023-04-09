@@ -1,35 +1,45 @@
-import asyncio
 from loader import dp, bot
 from data.config import ADMINS
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
-from states.state import WorkInfo
+from states.state import *
 from keyboards.inline.main import confirm, salary
-from keyboards.default.main import main, work_keyboard, phone, skip
+from keyboards.default.main import main_markup, work_keyboard, phone, skip
 
-summa = ""
-user_id = 5248186563
+user_id = ADMINS[0]
 
 
-@dp.message_handler(text="💻 Ish (topish) bo'yicha", state="*")
+@dp.message_handler(text="💻 Ish (topish) bo'yicha", state=MainState.command)
 async def freelance(message: types.Message, state: FSMContext):
-    if await state.get_data():
-        await state.finish()
-    await asyncio.sleep(0.05)
     await message.answer("O'zingizga kerakli bo'limni tanlang 👇", reply_markup=work_keyboard)
+    await MainState.next()
 
 
-@dp.message_handler(
-    text=["👥 Sherik kerak", "🏭 Ish joyi kerak", "🎓 Shogirt kerak", "🧑‍💻 Xodim kerak", "👨‍🏫 Ustoz kerak"], state="*")
-async def freelance(message: types.Message, state: FSMContext):
-    if await state.get_data():
-        await state.finish()
-    await asyncio.sleep(0.05)
-    await message.answer("Ismingizni to'liq kiriting\n\nMisol: <b>Soliyev Anvar</b>",
-                         reply_markup=ReplyKeyboardRemove())
-
-    await WorkInfo.fullname.set()
+@dp.message_handler(state=MainState.end)
+async def freelance(message: types.Message):
+    msg = message.text
+    if msg == "👥 Sherik kerak":
+        await message.answer("Ismingizni to'liq kiriting\n\nMisol: <b>Soliyev Anvar</b>",
+                             reply_markup=ReplyKeyboardRemove())
+        await PartnerInfo.name.set()
+    elif msg == "🏭 Ish joyi kerak":
+        await message.answer("Ismingizni to'liq kiriting\n\nMisol: <b>Soliyev Anvar</b>",
+                             reply_markup=ReplyKeyboardRemove())
+        await WorkplaceInfo.name.set()
+    elif msg == "🎓 Shogirt kerak":
+        await message.answer("Ismingizni to'liq kiriting\n\nMisol: <b>Soliyev Anvar</b>",
+                             reply_markup=ReplyKeyboardRemove())
+        await PartnerInfo.name.set()
+    elif msg == "🧑‍💻 Xodim kerak":
+        await message.answer(
+            "Ish joyi(kompaniya, korparatsiya)nomi kiritng\n\nMisol: <b>Fincube</b> yoki <b>Mindbook</b>",
+            reply_markup=ReplyKeyboardRemove())
+        await EmployeeInfo.name.set()
+    elif msg == "👨‍🏫 Ustoz kerak":
+        await message.answer("Ismingizni to'liq kiriting\n\nMisol: <b>Soliyev Anvar</b>",
+                             reply_markup=ReplyKeyboardRemove())
+        await PartnerInfo.name.set()
 
 
 @dp.message_handler(state=WorkInfo.fullname)
@@ -147,13 +157,13 @@ async def callme(call: types.CallbackQuery):
 async def callme(call: types.CallbackQuery):
     await call.message.send_copy(chat_id=5248186563, reply_markup=confirm)
     await call.message.delete()
-    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main)
+    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
 
 
 @dp.callback_query_handler(text="no", state='*')
 async def callme(call: types.CallbackQuery):
     await call.message.delete()
-    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main)
+    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
 
 
 @dp.callback_query_handler(state='*')

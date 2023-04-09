@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-main = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
-main.add(KeyboardButton("⚡️ Tezkor buyurtmalar (Freelance)"),
+main_markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+main_markup.add(KeyboardButton("⚡️ Tezkor buyurtmalar (Freelance)"),
          KeyboardButton("💻 Ish (topish) bo'yicha"))
 
 work_keyboard = ReplyKeyboardMarkup([
