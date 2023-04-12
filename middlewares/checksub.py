@@ -10,18 +10,13 @@ from loader import bot
 class BigBrother(BaseMiddleware):
     async def on_pre_process_update(self, update: types.Update, data: dict):
         if update.message:
-            print("msg")
             user = update.message.from_user.id
             if update.message.text in ['/start', ]:
                 return
         elif update.callback_query:
-            print("cq")
             user = update.callback_query.from_user.id
             if update.callback_query.data in ['check_subs', ]:
                 return
-        else:
-            print("els")
-            return
         logging.info(user)
         result = str()
         final_status = True
@@ -32,7 +27,7 @@ class BigBrother(BaseMiddleware):
             channel = await bot.get_chat(channel)
             if not status:
                 invite_link = await channel.export_invite_link()
-                result += (f"❌ <a href='{invite_link}'><b>{channel.title}</b></a>\n")
+                result += (f"Hello❌ <a href='{invite_link}'><b>{channel.title}</b></a>\n")
 
         if not final_status:
             await update.message.answer(result, disable_web_page_preview=True)

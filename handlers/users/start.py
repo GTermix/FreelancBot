@@ -23,6 +23,7 @@ async def bot_start(message: types.Message, state: FSMContext):
         channels_format.append(invite_link)
         result *= await subscription_check(user_id=message.from_user.id,
                                            channel=channel)
+        print(result)
     if not result:
         await message.answer(f"Quyidagi kanallarga obuna bo'ling 👇",
                              reply_markup=check_subs(channels_format))

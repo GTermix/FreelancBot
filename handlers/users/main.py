@@ -1,9 +1,11 @@
 from loader import dp, bot
-from data.config import ADMINS
+from data.config import ADMINS, CHANNELS
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from states.state import *
+from keyboards.inline.subscription import check_subs
+from utils.misc.subscription import check as subscription_check
 from keyboards.default.main import main_markup, work_keyboard
 
 user_id = ADMINS[0]
@@ -33,6 +35,27 @@ async def freelance(message: types.Message):
         await EmployeeInfo.name.set()
     else:
         await message.answer("Menga tugmalar orqali xabar yuboring")
+
+
+@dp.callback_query_handler(text="check_subs", state='*')
+async def subs_check(call: types.CallbackQuery):
+    await call.message.delete()
+    channels_format = list()
+    result = True
+    for channel in CHANNELS:
+        chat = await bot.get_chat(channel)
+        invite_link = await chat.export_invite_link()
+        channels_format.append(invite_link)
+        result *= await subscription_check(user_id=call.from_user.id,
+                                           channel=channel)
+    if not result:
+        await call.message.answer(f"Quyidagi kanallarga obuna bo'ling 👇",
+                                  reply_markup=check_subs(channels_format))
+    else:
+        msg = f"Assalomu alaykum, xush kelibsiz\n👤 <b><a href=\"tg://user?id={call.from_user.id}\">" \
+              f"{call.from_user.full_name}</a></b>!" \
+              f"\nBotimizdan foydalanishingiz mumkin. Tugmalardan foydalanib menga xabar yuboring 🔽"
+        await call.message.answer(msg, reply_markup=main_markup)
 
 
 @dp.callback_query_handler(state='*', chat_id=ADMINS)

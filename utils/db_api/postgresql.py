@@ -17,6 +17,7 @@ class Database:
             password=config.DB_PASS,
             host=config.DB_HOST,
             database=config.DB_NAME,
+            port=5433
         )
 
     async def execute(
