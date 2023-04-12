@@ -3,38 +3,28 @@ from loader import dp, bot
 from data.config import ADMINS
 from aiogram.types import ReplyKeyboardRemove
 from aiogram import types
-from states.state import FreelanceInfo
-from keyboards.default.main import freelance, skip, phone, main_markup
-from keyboards.inline.main import confirm, salary
+from states.state import FreelanceInfo, MainState
+from keyboards.default.main import freelance, skip, phone, main_markup, back
+from keyboards.inline.main import confirm, salary, confirm_admin
 
 summa = ""
 
 
-@dp.message_handler(text="⚡️ Tezkor buyurtmalar (Freelance)", state="*")
+@dp.message_handler(text="⚡️ Tezkor buyurtmalar (Freelance)", state=MainState.command)
 async def freel(message: types.Message, state: FSMContext):
-    if await state.get_data():
-        await state.finish()
     await message.answer("Foydalanuvchi siz tezkor buyurtmalar bo'limidasiz. Bu bo'limda siz buyurtmalar berasiz."
                          "\nMisol: bot yasash, android dastur tuzish va hokozo. buyurtmalar uchun tugmalardan "
                          "foydalaning 👇", reply_markup=freelance)
+    await FreelanceInfo.assign.set()
 
 
-@dp.message_handler(text="🧑‍💻 Buyurtma berish")
+@dp.message_handler(state=FreelanceInfo.assign)
 async def free(message: types.Message, state: FSMContext):
-    if await state.get_data():
-        await state.finish()
-    await message.answer("Loyiha (proyekt) nomini.\nMisollar: <b>Telegram kirdi chiqdi bot</b>, <b>Suhbat dasturi "
-                         "(apk fayl)</b>, <b>Android uchun o'yin</b>, <b>Komyputer uchun dastur</b> va hokozo.",
-                         reply_markup=ReplyKeyboardRemove())
-    await FreelanceInfo.name.set()
-
-
-@dp.message_handler(text="🚪 Bosh menu", state=FreelanceInfo.name)
-async def free(message: types.Message, state: FSMContext):
-    if await state.get_data():
-        await state.finish()
-    await message.answer("Bosh menyudasiz kerakli bo'limni tanlang 👇", reply_markup=ReplyKeyboardRemove())
-
+    if message.text == "🧑‍💻 Buyurtma berish":
+        await message.answer("Loyiha (proyekt) nomini.\nMisollar: <b>Telegram kirdi chiqdi bot</b>, <b>Suhbat dasturi "
+                             "(apk fayl)</b>, <b>Android uchun o'yin</b>, <b>Komyputer uchun dastur</b> va hokozo.",
+                             reply_markup=back)
+        await FreelanceInfo.name.set()
 
 @dp.message_handler(state=FreelanceInfo.name)
 async def free(message: types.Message, state: FSMContext):
@@ -60,7 +50,7 @@ async def freelance_df(message: types.Message, state: FSMContext):
     await FreelanceInfo.next()
 
 
-@dp.callback_query_handler(text="done", state='*')
+@dp.callback_query_handler(text="done", state=FreelanceInfo.work_price)
 async def callme(call: types.CallbackQuery, state: FSMContext):
     global summa
     for i in range(len(summa)):
@@ -75,7 +65,7 @@ async def callme(call: types.CallbackQuery, state: FSMContext):
     await FreelanceInfo.next()
 
 
-@dp.callback_query_handler(text="clear", state='*')
+@dp.callback_query_handler(text="clear", state=FreelanceInfo.work_price)
 async def callme(call: types.CallbackQuery):
     global summa
     summa = "0"
@@ -83,42 +73,24 @@ async def callme(call: types.CallbackQuery):
     summa = ""
 
 
-@dp.callback_query_handler(text="yes", state='*', chat_id=ADMINS)
-async def callme(call: types.CallbackQuery):
-    global user_id
-    await call.message.edit_reply_markup(None)
-    message_id = await bot.send_message(chat_id="@silkanomi2", text=call.message.html_text)
-    await bot.send_message(chat_id=ADMINS[0],
-                           text=f"Sizning e'loningiz @silkanomi2 kanaliga joylandi\n[Xabarni "
-                                f"ko'rish](https://t.me/silkanomi2/{message_id['message_id']})",
-                           parse_mode="markdown", disable_web_page_preview=True)
-    await call.message.edit_text(call.message.text, reply_markup=None)
-
-
-@dp.callback_query_handler(text="no", state='*', chat_id=ADMINS)
-async def callme(call: types.CallbackQuery):
-    global user_id
-    await call.message.edit_text(call.message.text, reply_markup=None)
-    await bot.send_message(chat_id=user_id,
-                           text="Hurmatli foydalanuvchi siz yuborgan xabar(e'lon)da adminlarimiz ga nomaqbul kelgan "
-                                "kontent topildi shu tufayli xabar(e'lon)ingizni qayta ko'rib chiqib, yuborishingizni "
-                                "so'raymiz! \n\nHurmat bilan UzBCoder_bot", reply_markup=None)
-
-
-@dp.callback_query_handler(text="yes", state='*')
-async def callme(call: types.CallbackQuery):
-    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm)
+@dp.callback_query_handler(text="yes", state=FreelanceInfo.done)
+async def callme(call: types.CallbackQuery, state: FSMContext):
+    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm_admin(call.from_user.id))
     await call.message.delete()
-    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main)
+    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
+    await state.finish()
+    await MainState.command.set()
 
 
-@dp.callback_query_handler(text="no", state='*')
-async def callme(call: types.CallbackQuery):
+@dp.callback_query_handler(text="no", state=FreelanceInfo.done)
+async def callme(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
-    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main)
+    await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
+    await state.finish()
+    await MainState.command.set()
 
 
-@dp.callback_query_handler(state='*')
+@dp.callback_query_handler(state=FreelanceInfo.work_price)
 async def callme(call: types.CallbackQuery):
     global summa
     summa += call.data
@@ -146,6 +118,20 @@ async def work_tm(message: types.Message, state: FSMContext):
 async def work_tm(message: types.Message, state: FSMContext):
     await state.update_data({"condition": message.text})
     data = await state.get_data()
-    fin = f"Ish nomi: {data.get('name')}\n\n" \
-          f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): {data.get('language')}\n\n" \
-          f"Bog'lanish uchun raqam: "
+    if message.text != "➡️ Tashlab ketish":
+        fin = f"Ish nomi: {data.get('name')}\n\n" \
+              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): {data.get('language')}\n\n" \
+              f"Bog'lanish uchun raqam: {data.get('phone')}\n" \
+              f"Belgilangan ish haqqi: {data.get('work_price')}\n" \
+              f"Buyurtma bajarilishi kerak bo'lgan vaqt: {data.get('time_limit')}\n" \
+              f"Ish haqida ma'lumot: {data.get('work_information')}\n" \
+              f"Shartlari: {data.get('conditions')}"
+    else:
+        fin = f"Ish nomi: {data.get('name')}\n\n" \
+              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): {data.get('language')}\n\n" \
+              f"Bog'lanish uchun raqam: {data.get('phone')}\n" \
+              f"Belgilangan ish haqqi: {data.get('work_price')}\n" \
+              f"Buyurtma bajarilishi kerak bo'lgan vaqt: {data.get('time_limit')}\n" \
+              f"Ish haqida ma'lumot: {data.get('work_information')}\n"
+    await message.answer(fin, reply_markup=confirm)
+    await FreelanceInfo.next()

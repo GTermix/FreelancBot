@@ -7,6 +7,7 @@ class MainState(StatesGroup):
 
 
 class FreelanceInfo(StatesGroup):
+    assign = State()
     name = State()
     language = State()
     phone = State()
@@ -14,6 +15,11 @@ class FreelanceInfo(StatesGroup):
     time_limit = State()
     work_information = State()
     conditions = State()
+    done = State()
+
+
+class ContactAdmin(StatesGroup):
+    mesg = State()
 
 
 class PartnerInfo(StatesGroup):

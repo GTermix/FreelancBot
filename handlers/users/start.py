@@ -11,7 +11,7 @@ from data.config import CHANNELS
 from keyboards.inline.subscription import check_subs
 
 
-@dp.message_handler(IsPrivate(), CommandStart(), state="*")
+@dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state: FSMContext):
     if await state.get_data():
         await state.finish()

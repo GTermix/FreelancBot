@@ -5,8 +5,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from states.state import *
-from keyboards.inline.main import confirm
-from keyboards.default.main import main_markup, phone, skip
+from keyboards.inline.main import confirm, confirm_admin
+from keyboards.default.main import main_markup, phone, skip, back
 
 
 @dp.message_handler(state=WorkplaceInfo.name)
@@ -19,7 +19,8 @@ async def freelance(message: types.Message, state: FSMContext):
     if fn.isalpha():
         if len(fullname.split()) >= 2:
             await state.update_data({"fullname": message.text})
-            await message.answer("Yoshingizni son bilan kiriting\nMaksimum yosh chegarasi 45 yosh\n\nMisol: <b>18</b>")
+            await message.answer("Yoshingizni son bilan kiriting\nMaksimum yosh chegarasi 45 yosh\n\nMisol: <b>18</b>",
+                                 reply_markup=back)
             await WorkplaceInfo.next()
         else:
             await message.answer("Ismingiz va familyangizni kiriting !")
@@ -63,7 +64,7 @@ async def freelance(message: types.Message, state: FSMContext):
     await message.answer(
         "Manzilingizni kiriting\nIltimos viloyat shahar nomlarini probel(\" \") bilan ajratib yozing huddi quyidagi "
         "misolda keltirilgandek\n\nMisol: <b>Xorazm Urganch</b>",
-        reply_markup=ReplyKeyboardRemove())
+        reply_markup=back)
     await WorkplaceInfo.next()
 
 
@@ -96,10 +97,11 @@ async def freelance(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text="yes", state=WorkplaceInfo.done)
 async def callme(call: types.CallbackQuery, state: FSMContext):
-    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm)
+    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm_admin(call.from_user.id))
     await call.message.delete()
     await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
     await state.finish()
+    await MainState.command.set()
 
 
 @dp.callback_query_handler(text="no", state=WorkplaceInfo.done)
@@ -107,6 +109,7 @@ async def callme(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
     await state.finish()
+    await MainState.command.set()
 
 
 @dp.message_handler(state=WorkplaceInfo.description)
@@ -121,7 +124,6 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Hozirgi manzili: <b>{data.get('location')}</b>\n" \
               f"Tajribasi: <b>{data.get('experience')} yil</b>\n"
         await message.answer(fin, reply_markup=confirm)
-        await state.finish()
     else:
         await state.update_data({"description": message.text})
         data = await state.get_data()
@@ -134,5 +136,3 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Tajribasi: <b>{data.get('experience')} yil</b>\n" \
               f"Qo'shimcha ma'lumot: <i>{data.get('description')}</i>"
         await message.answer(fin, reply_markup=confirm)
-    await WorkplaceInfo.next()
-    await state.update_data({"user_id": message.from_user.id})

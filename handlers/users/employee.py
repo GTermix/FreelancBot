@@ -5,8 +5,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from states.state import *
-from keyboards.inline.main import confirm
-from keyboards.default.main import main_markup, phone, skip
+from keyboards.inline.main import confirm, confirm_admin
+from keyboards.default.main import main_markup, phone, skip, back
 
 
 @dp.message_handler(state=EmployeeInfo.name)
@@ -14,7 +14,7 @@ async def freelance(message: types.Message, state: FSMContext):
     await state.update_data({"fullname": message.text})
     await message.answer(
         "Manzilingizni kiriting\nIltimos viloyat shahar nomlarini probel(\" \") bilan ajratib yozing huddi quyidagi "
-        "misolda keltirilgandek\n\nMisol: <b>Xorazm Urganch</b>")
+        "misolda keltirilgandek\n\nMisol: <b>Xorazm Urganch</b>", reply_markup=back)
     await EmployeeInfo.next()
 
 
@@ -83,10 +83,11 @@ async def freelance(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text="yes", state=EmployeeInfo.done)
 async def callme(call: types.CallbackQuery, state: FSMContext):
-    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm)
+    await call.message.send_copy(chat_id=ADMINS[0], reply_markup=confirm_admin(call.from_user.id))
     await call.message.delete()
     await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
     await state.finish()
+    await MainState.command.set()
 
 
 @dp.callback_query_handler(text="no", state=EmployeeInfo.done)
@@ -94,6 +95,7 @@ async def callme(call: types.CallbackQuery, state: FSMContext):
     await call.message.delete()
     await call.message.answer("Kerakli bo'limni tanlang 👇", reply_markup=main_markup)
     await state.finish()
+    await MainState.command.set()
 
 
 @dp.message_handler(state=EmployeeInfo.description)
@@ -108,9 +110,7 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Ish beruvchi manzili: <b>{data.get('location')}</b>\n" \
               f"Talab qilinadigan tajriba: <b>{data.get('experience')} yil</b>\n"
         await message.answer(fin, reply_markup=confirm)
-        await state.finish()
     else:
-
         await state.update_data({"description": message.text})
         data = await state.get_data()
         fin = f"Xodim kerak 👇\n\n" \
@@ -122,4 +122,3 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Talab qilinadigan tajriba: <b>{data.get('experience')} yil</b>\n" \
               f"Qo'shimcha ma'lumot: <i>{data.get('description')}</i>"
         await message.answer(fin, reply_markup=confirm)
-    # await state.update_data({"user_id": message.from_user.id})
