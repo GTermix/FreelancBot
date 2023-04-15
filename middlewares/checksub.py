@@ -5,6 +5,7 @@ from aiogram.dispatcher.middlewares import BaseMiddleware
 from keyboards.inline.subscription import check_subs
 from utils.misc.subscription import check as subscription_check
 from data.config import CHANNELS
+from filters.private import IsPrivate
 from utils.misc import subscription
 from loader import bot
 
@@ -31,7 +32,7 @@ class BigBrother(BaseMiddleware):
             if not status:
                 invite_link = await channel.export_invite_link()
                 channels_format.append(invite_link)
-        if not final_status:
+        if not final_status and IsPrivate():
             await update.message.answer(f"Quyidagi kanallarga obuna bo'ling 👇",
                                         reply_markup=check_subs(channels_format))
             raise CancelHandler()
