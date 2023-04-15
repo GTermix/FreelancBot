@@ -26,6 +26,7 @@ async def free(message: types.Message, state: FSMContext):
                              reply_markup=back)
         await FreelanceInfo.name.set()
 
+
 @dp.message_handler(state=FreelanceInfo.name)
 async def free(message: types.Message, state: FSMContext):
     await state.update_data({"name": message.text})
@@ -45,6 +46,7 @@ async def free(message: types.Message, state: FSMContext):
 @dp.message_handler(content_types=['contact'], state=FreelanceInfo.phone)
 async def freelance_df(message: types.Message, state: FSMContext):
     await state.update_data({"phone": message.contact.phone_number})
+    await message.answer("Raqam saqlandi", reply_markup=ReplyKeyboardRemove())
     await message.answer("Ish uchun ish haqqini kiriting. Summa dollar(USD, $ )da hisoblanadi.\nMisol 200 -> 200 $",
                          reply_markup=salary)
     await FreelanceInfo.next()
@@ -119,19 +121,21 @@ async def work_tm(message: types.Message, state: FSMContext):
     await state.update_data({"condition": message.text})
     data = await state.get_data()
     if message.text != "➡️ Tashlab ketish":
-        fin = f"Ish nomi: {data.get('name')}\n\n" \
-              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): {data.get('language')}\n\n" \
-              f"Bog'lanish uchun raqam: {data.get('phone')}\n" \
-              f"Belgilangan ish haqqi: {data.get('work_price')}\n" \
-              f"Buyurtma bajarilishi kerak bo'lgan vaqt: {data.get('time_limit')}\n" \
-              f"Ish haqida ma'lumot: {data.get('work_information')}\n" \
-              f"Shartlari: {data.get('conditions')}"
+        fin = f"⭕️ Tezkor buyurtma ⭕️\n\n" \
+              f"Ish nomi: <b>{data.get('name')}</b>\n" \
+              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): <b>{data.get('language')}</b>\n" \
+              f"Bog'lanish uchun raqam: <b><span class=\"tg-spoiler\">{data.get('phone')}</span></b>\n" \
+              f"Belgilangan ish haqqi: <b>{data.get('salary')}</b>\n" \
+              f"Buyurtma bajarilishi kerak bo'lgan vaqt: <b>{data.get('time_limit')}</b>\n" \
+              f"Ish haqida ma'lumot: <b>{data.get('work_info')}</b>\n" \
+              f"Shartlari: <b>{data.get('condition')}</b>"
     else:
-        fin = f"Ish nomi: {data.get('name')}\n\n" \
-              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): {data.get('language')}\n\n" \
-              f"Bog'lanish uchun raqam: {data.get('phone')}\n" \
-              f"Belgilangan ish haqqi: {data.get('work_price')}\n" \
-              f"Buyurtma bajarilishi kerak bo'lgan vaqt: {data.get('time_limit')}\n" \
-              f"Ish haqida ma'lumot: {data.get('work_information')}\n"
+        fin = f"⭕️ Tezkor buyurtma ⭕️\n\n" \
+              f"Ish nomi: <b>{data.get('name')}</b>\n" \
+              f"Dasturlash tili yoki dastur(ishni bajarish uchun majburiyat): <b>{data.get('language')}</b>\n" \
+              f"Bog'lanish uchun raqam: <b><span class=\"tg-spoiler\">{data.get('phone')}</span></b>\n" \
+              f"Belgilangan ish haqqi: <b>{data.get('salary')}</b>\n" \
+              f"Buyurtma bajarilishi kerak bo'lgan vaqt: <b>{data.get('time_limit')}</b>\n" \
+              f"Ish haqida ma'lumot: <b>{data.get('work_info')}</b>\n"
     await message.answer(fin, reply_markup=confirm)
     await FreelanceInfo.next()

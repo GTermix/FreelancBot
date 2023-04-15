@@ -4,9 +4,9 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from states.state import *
-from keyboards.inline.subscription import check_subs
 from utils.misc.subscription import check as subscription_check
 from keyboards.default.main import main_markup, work_keyboard
+from keyboards.inline.main import contact_admin
 
 user_id = ADMINS[0]
 
@@ -39,7 +39,6 @@ async def freelance(message: types.Message):
 
 @dp.callback_query_handler(text="check_subs", state='*')
 async def subs_check(call: types.CallbackQuery):
-    await call.message.delete()
     channels_format = list()
     result = True
     for channel in CHANNELS:
@@ -49,23 +48,44 @@ async def subs_check(call: types.CallbackQuery):
         result *= await subscription_check(user_id=call.from_user.id,
                                            channel=channel)
     if not result:
-        await call.message.answer(f"Quyidagi kanallarga obuna bo'ling 👇",
-                                  reply_markup=check_subs(channels_format))
+        await call.answer("Hamma kanallarga a'zo bo'ling")
     else:
+        await call.message.delete()
         msg = f"Assalomu alaykum, xush kelibsiz\n👤 <b><a href=\"tg://user?id={call.from_user.id}\">" \
               f"{call.from_user.full_name}</a></b>!" \
               f"\nBotimizdan foydalanishingiz mumkin. Tugmalardan foydalanib menga xabar yuboring 🔽"
         await call.message.answer(msg, reply_markup=main_markup)
 
 
-@dp.callback_query_handler(state='*', chat_id=ADMINS)
+@dp.callback_query_handler(lambda call: call.data[:4] in ["repl", "read"], state='*', chat_id=ADMINS)
+async def reply_user_request(call: types.CallbackQuery, state: FSMContext):
+    if call.data == "read":
+        await call.message.edit_reply_markup()
+    else:
+        data_ = call.data.split('_')
+        await state.update_data({"user_id": data_[1], "msg_id": data_[2]})
+        await call.message.answer("Yubormoqchi bo'lgan xabaringizni yuboring")
+        await ReplyUser.send.set()
+
+
+@dp.message_handler(content_types=['any'], state=ReplyUser.send)
+async def reply_message_to_user(message: types.Message, state: FSMContext):
+    data_ = await state.get_data()
+    await bot.copy_message(data_.get('user_id'), message.from_user.id, message.message_id,
+                           reply_to_message_id=data_.get('msg_id'))
+    await message.answer("Xabaringiz foydalanuvchiga muvoffaqiyatli yetkazildi", reply_markup=main_markup)
+    await state.finish()
+    await MainState.command.set()
+
+
+@dp.callback_query_handler(lambda call: call.data[:3] in ["yes", "no_"], state='*', chat_id=ADMINS)
 async def callme(call: types.CallbackQuery):
     data_ = call.data.split('_')
     if data_[0] == "yes":
-        message_id = await bot.send_message(chat_id="@silkanomi2", text=call.message.html_text)
+        message_id = await bot.send_message(chat_id="@FreelanceUz_channel", text=call.message.html_text)
         await bot.send_message(chat_id=data_[1],
-                               text=f"Sizning e'loningiz @silkanomi2 kanaliga joylandi\n[Xabarni "
-                                    f"ko'rish](https://t.me/silkanomi2/{message_id['message_id']})",
+                               text=f"Sizning e'loningiz @FreelanceUz_channel kanaliga joylandi\n[Xabarni "
+                                    f"ko'rish](https://t.me/FreelanceUz_channel/{message_id['message_id']})",
                                parse_mode="markdown", disable_web_page_preview=True)
         await call.message.edit_text(call.message.text, reply_markup=None)
     elif data_[0] == "no":
@@ -84,7 +104,8 @@ async def contact(message: types.Message):
 
 @dp.message_handler(content_types=['any'], state=ContactAdmin.mesg)
 async def contact(message: types.Message, state: FSMContext):
-    await bot.copy_message(chat_id=ADMINS[0], from_chat_id=message.from_user.id, message_id=message.message_id)
+    await bot.copy_message(chat_id=ADMINS[0], from_chat_id=message.from_user.id,caption="kahsbcu", message_id=message.message_id,
+                           reply_markup=contact_admin(message.from_user.id, message.message_id))
     await message.answer("Xabaringiz adminga yetkazildi. Xabaringiz bo'yicha siz bilan bog'lanishadi")
     await message.answer("Bosh menydasiz kerakli bo'limni tanlang", reply_markup=main_markup)
     await state.finish()

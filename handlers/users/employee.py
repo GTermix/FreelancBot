@@ -122,3 +122,4 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Talab qilinadigan tajriba: <b>{data.get('experience')} yil</b>\n" \
               f"Qo'shimcha ma'lumot: <i>{data.get('description')}</i>"
         await message.answer(fin, reply_markup=confirm)
+    await EmployeeInfo.next()

@@ -31,7 +31,7 @@ async def freelance(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda message: message.text.isdigit(), state=PartnerInfo.age)
 async def freelance(message: types.Message, state: FSMContext):
     if message.text.isdigit():
-        if 10 < int(message.text) < 50:
+        if 10 <= int(message.text) <= 50:
             age = message.text
             await state.update_data({"age": age})
             await message.answer(
@@ -123,7 +123,6 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Ish vaqti: <b>{data.get('work_time')}</b>\n" \
               f"Tajribasi: <b>{data.get('experience')} yil</b>\n"
         await message.answer(fin, reply_markup=confirm)
-        await state.finish()
     else:
         await state.update_data({"description": message.text})
         data = await state.get_data()
@@ -137,3 +136,4 @@ async def freelance(message: types.Message, state: FSMContext):
               f"Tajribasi: <b>{data.get('experience')} yil</b>\n" \
               f"Qo'shimcha ma'lumot: <i>{data.get('description')}</i>"
         await message.answer(fin, reply_markup=confirm)
+    await PartnerInfo.next()

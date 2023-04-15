@@ -69,3 +69,8 @@ class WorkInfo(StatesGroup):
     experience = State()
     salary_price = State()
     description = State()
+
+
+class ReplyUser(StatesGroup):
+    send = State()
+

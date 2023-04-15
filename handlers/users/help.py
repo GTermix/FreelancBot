@@ -4,10 +4,9 @@ from aiogram.dispatcher.filters.builtin import CommandHelp
 from loader import dp
 
 
-@dp.message_handler(CommandHelp())
+@dp.message_handler(CommandHelp(), state='*')
 async def bot_help(message: types.Message):
-    text = ("Buyruqlar: ",
-            "/start - Botni ishga tushirish",
-            "/help - Yordam")
-    
-    await message.answer("\n".join(text))
+    await message.answer(
+        "Bu bot Freelansing (yollanma ish topish) uchun yaratilgan siz buyerda online ish topishingiz mumkin misol "
+        "uchun uy-joy chizmalari, web, android dasturlar vahokozolarga buyurtma bersihingiz mukin buyurtma berish tekin"
+        " ammo ish haqqini ish ni bajaruvchi freelanser(yollanma ishchi) bilan kelishasiz")

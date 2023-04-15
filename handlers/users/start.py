@@ -16,15 +16,16 @@ async def bot_start(message: types.Message, state: FSMContext):
     if await state.get_data():
         await state.finish()
     channels_format = list()
-    result = True
+    final_result = True
     for channel in CHANNELS:
         chat = await bot.get_chat(channel)
-        invite_link = await chat.export_invite_link()
-        channels_format.append(invite_link)
-        result *= await subscription_check(user_id=message.from_user.id,
-                                           channel=channel)
-        print(result)
-    if not result:
+        result = await subscription_check(user_id=message.from_user.id,
+                                          channel=channel)
+        final_result *= result
+        if not result:
+            invite_link = await chat.export_invite_link()
+            channels_format.append(invite_link)
+    if not final_result:
         await message.answer(f"Quyidagi kanallarga obuna bo'ling 👇",
                              reply_markup=check_subs(channels_format))
     else:

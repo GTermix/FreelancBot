@@ -11,6 +11,13 @@ def confirm_admin(user_id):
     return confirmation_admin
 
 
+def contact_admin(user_id, msg_id):
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton("Javob yozish", callback_data=f"reply_{user_id}_{msg_id}"))
+    keyboard.add(InlineKeyboardButton("O'qilgan deb belgilash",callback_data="read"))
+    return keyboard
+
+
 salary = InlineKeyboardMarkup()
 for i in range(1, 10):
     salary.insert(InlineKeyboardButton(str(i), callback_data=str(i)))
